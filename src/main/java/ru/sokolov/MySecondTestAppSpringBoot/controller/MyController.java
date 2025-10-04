@@ -40,7 +40,6 @@ public class MyController {
                 .errorMessage("")
                 .build();
 
-
         try {
             // Проверка на uid = 123
             if ("123".equals(request.getUid())) {
