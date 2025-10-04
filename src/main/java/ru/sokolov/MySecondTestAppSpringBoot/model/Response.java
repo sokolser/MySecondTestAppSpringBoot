@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Codes;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorCodes;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorMessages;
 
 @Data
 @Builder
@@ -11,10 +14,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 public class Response {
-    private String uid;
-    private String operationUid;
-    private String systemTime;
-    private String code;
-    private String errorCode;
-    private String errorMessage;
+     String uid;
+     String operationUid;
+     String systemTime;
+     Codes code;
+     ErrorCodes errorCode;
+     ErrorMessages errorMessage;
 }

@@ -1,5 +1,6 @@
 package ru.sokolov.MySecondTestAppSpringBoot.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,11 +12,18 @@ import ru.sokolov.MySecondTestAppSpringBoot.exception.UnsupportedCodeException;
 import ru.sokolov.MySecondTestAppSpringBoot.exception.ValidationFailedException;
 import ru.sokolov.MySecondTestAppSpringBoot.model.Request;
 import ru.sokolov.MySecondTestAppSpringBoot.model.Response;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Codes;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorCodes;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorMessages;
 import ru.sokolov.MySecondTestAppSpringBoot.service.ValidationService;
 import jakarta.validation.Valid;
+import ru.sokolov.MySecondTestAppSpringBoot.util.DateTimeUtil;
+
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 public class MyController {
 
@@ -31,15 +39,16 @@ public class MyController {
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
+        log.info("request: {}", request);
+
         Response response = Response.builder()
                 .uid(request.getUid())
                 .operationUid(request.getOperationUid())
-                .systemTime(request.getSystemTime())
-                .code("success")
-                .errorCode("")
-                .errorMessage("")
+                .systemTime(DateTimeUtil.getCustomFormat().format(new Date()))
+                .code(Codes.SUCCESS)
+                .errorCode(ErrorCodes.EMPTY)
+                .errorMessage(ErrorMessages.EMPTY)
                 .build();
-
 
         try {
             // Проверка на uid = 123
@@ -50,22 +59,22 @@ public class MyController {
             validationService.isValid(bindingResult);
 
         } catch (UnsupportedCodeException e) {
-            response.setCode("failed");
-            response.setErrorCode("UnsupportedCodeException");
-            response.setErrorMessage(e.getMessage());
+            response.setCode(Codes.FAILED);
+            response.setErrorCode(ErrorCodes.UNSUPPORTED_EXCEPTION);
+            response.setErrorMessage(ErrorMessages.UNSUPPORTED);
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (ValidationFailedException e) {
-            response.setCode("failed");
-            response.setErrorCode("ValidationException");
+            response.setCode(Codes.FAILED);
+            response.setErrorCode(ErrorCodes.VALIDATION_EXCEPTION);
             String allErrors = bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .collect(Collectors.joining("; "));
-            response.setErrorMessage(allErrors);
+            response.setErrorMessage(ErrorMessages.VALIDATION);
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            response.setCode("failed");
-            response.setErrorCode("UnknownException");
-            response.setErrorMessage("Произошла непредвиденная ошибка");
+            response.setCode(Codes.FAILED);
+            response.setErrorCode(ErrorCodes.UNKNOWN_EXCEPTION);
+            response.setErrorMessage(ErrorMessages.UNKNOWN);
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
