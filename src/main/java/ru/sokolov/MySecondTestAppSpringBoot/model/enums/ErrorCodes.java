@@ -3,11 +3,13 @@ package ru.sokolov.MySecondTestAppSpringBoot.model.enums;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ErrorCodes {
-
     EMPTY(""),
-    VALIDATION_EXCEPTION("Ошибка валидации"),
-    UNSUPPORTED_EXCEPTION("Не поддерживаемая ошибка"),
-    UNKNOWN_EXCEPTION("Произошла непредвиденная ошибка");
+
+    VALIDATION_EXCEPTION("ValidationException"),
+
+    UNSUPPORTED_EXCEPTION("UnsupportedException"),
+
+    UNKNOWN_EXCEPTION("UnknownException");
 
     private final String name;
 

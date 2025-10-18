@@ -1,7 +1,9 @@
 package ru.sokolov.MySecondTestAppSpringBoot.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -10,28 +12,39 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import ru.sokolov.MySecondTestAppSpringBoot.exception.UnsupportedCodeException;
 import ru.sokolov.MySecondTestAppSpringBoot.exception.ValidationFailedException;
-import ru.sokolov.MySecondTestAppSpringBoot.model.Request;
-import ru.sokolov.MySecondTestAppSpringBoot.model.Response;
+import ru.sokolov.MySecondTestAppSpringBoot.model.*;
 import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Codes;
 import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorCodes;
 import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorMessages;
-import ru.sokolov.MySecondTestAppSpringBoot.service.ValidationService;
-import jakarta.validation.Valid;
+import ru.sokolov.MySecondTestAppSpringBoot.service.*;
 import ru.sokolov.MySecondTestAppSpringBoot.util.DateTimeUtil;
 
 import java.text.SimpleDateFormat;
+import java.time.Year;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 public class MyController {
 
     private final ValidationService validationService;
+    private final ModifyResponseService modifyResponseService;
+    private final ModifyRequestService modifyRequestService;
+    private final AnnualBonusService annualBonusService;
+    private final QuarterBonusService quarterBonusService;
 
     @Autowired
-    public MyController(ValidationService validationService) {
+    public MyController(ValidationService validationService,
+                        @Qualifier("ModifySystemTimeResponseService") ModifyResponseService modifyResponseService,
+                        @Qualifier("ModifyComplexRequestService") ModifyRequestService modifyRequestService,
+                        AnnualBonusService annualBonusService,
+                        QuarterBonusService quarterBonusService) {
         this.validationService = validationService;
+        this.modifyResponseService = modifyResponseService;
+        this.modifyRequestService = modifyRequestService;
+        this.annualBonusService = annualBonusService;
+        this.quarterBonusService = quarterBonusService;
     }
 
     @PostMapping(value = "/feedback")
@@ -43,6 +56,7 @@ public class MyController {
         Response response = Response.builder()
                 .uid(request.getUid())
                 .operationUid(request.getOperationUid())
+                .systemName(request.getSystemName())
                 .systemTime(DateTimeUtil.getCustomFormat().format(new Date()))
                 .code(Codes.SUCCESS)
                 .errorCode(ErrorCodes.EMPTY)
@@ -52,47 +66,55 @@ public class MyController {
         log.info("[CONTROLLER] response: {}", response);
 
         try {
-            // Проверка на uid = 123
-            if ("123".equals(request.getUid())) {
-                log.error("[CONTROLLER] UID 123 не поддерживается");
-                throw new UnsupportedCodeException("UID 123 не поддерживается");
-            }
-
-            log.info("[CONTROLLER] Начало валидации");
             validationService.isValid(bindingResult);
-            log.info("[CONTROLLER] Валидация завершена");
-
         } catch (UnsupportedCodeException e) {
-            log.error("[CONTROLLER] Ошибка UnsupportedCodeException: {}", e.getMessage(), e);
-            response.setCode(Codes.FAILED);
-            response.setErrorCode(ErrorCodes.UNSUPPORTED_EXCEPTION);
-            response.setErrorMessage(ErrorMessages.UNSUPPORTED);
-            log.info("[CONTROLLER] response после обработки ошибки UnsupportedCodeException: {}", response);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-
+            return generateErrorResponse(response, ErrorCodes.UNSUPPORTED_EXCEPTION, ErrorMessages.UNSUPPORTED, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (ValidationFailedException e) {
-            log.error("[CONTROLLER] Ошибка ValidationFailedException: {}", e.getMessage(), e);
-            String allErrors = bindingResult.getAllErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .collect(Collectors.joining("; "));
-            log.error("[CONTROLLER] Ошибки валидации: {}", allErrors);
-
-            response.setCode(Codes.FAILED);
-            response.setErrorCode(ErrorCodes.VALIDATION_EXCEPTION);
-            response.setErrorMessage(ErrorMessages.VALIDATION);
-            log.info("[CONTROLLER] response после обработки ошибки ValidationFailedException: {}", response);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-
+            return generateErrorResponse(response, ErrorCodes.VALIDATION_EXCEPTION, ErrorMessages.VALIDATION, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            log.error("[CONTROLLER] Неизвестная ошибка: {}", e.getMessage(), e);
-            response.setCode(Codes.FAILED);
-            response.setErrorCode(ErrorCodes.UNKNOWN_EXCEPTION);
-            response.setErrorMessage(ErrorMessages.UNKNOWN);
-            log.info("[CONTROLLER] response после обработки неизвестной ошибки: {}", response);
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            return generateErrorResponse(response, ErrorCodes.UNKNOWN_EXCEPTION, ErrorMessages.UNKNOWN, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        log.info("конец запроса");
-        log.info("[CONTROLLER] response: {}", response);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+
+        response.setAnnualBonus(annualBonusService.calculate(
+                request.getPosition(),
+                request.getSalary(),
+                request.getBonus(),
+                request.getWorkDays(),
+                Year.now().getValue()));
+
+        if (request.getPosition().isManager()) {
+            response.setQuarterlyBonus(quarterBonusService.calculate(
+                    request.getPosition(),
+                    request.getSalary(),
+                    request.getBonus(),
+                    request.getWorkDays(),
+                    Year.now().getValue(),
+                    getCurrentQuarter()
+            ));
+        }
+
+//        modifyRequestService.modify(request);
+
+        Response modifiedResponse = modifyResponseService.modify(response);
+
+        log.info("[CONTROLLER]response modify: {}", response);
+        log.info("[CONTROLLER]конец запроса");
+
+        return new ResponseEntity<>(modifiedResponse, HttpStatus.OK);
+    }
+
+    private ResponseEntity<Response> generateErrorResponse(Response response, ErrorCodes code, ErrorMessages message,
+                                                           HttpStatus status) {
+        response.setCode(Codes.FAILED);
+        response.setErrorCode(code);
+        response.setErrorMessage(message);
+        return new ResponseEntity<>(response, status);
+    }
+
+    private int getCurrentQuarter() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        int monthValue = calendar.get(Calendar.MONTH);
+        return monthValue / 3;
     }
 }

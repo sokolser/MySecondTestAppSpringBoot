@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import  lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Positions;
 import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Systems;
 
 @Data
@@ -13,41 +15,96 @@ import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Systems;
 @AllArgsConstructor
 public class Request {
 
-    @NotBlank(message = "uid является обязательным полем")
-    @Size(max = 32, message = "UID не может превышать 32 символа")
+    /**
+     * Уникальный идентификатор сообщения
+     */
+    @NotBlank(message = "UID не может быть пустым")
+    @Length(max = 32)
+    @Pattern(regexp = "^(?!123$).*")
     private String uid;
 
-    @NotBlank(message = "Operation UID является обязательным полем")
-    @Size(max = 32, message = "Operation UID не может превышать 32 символа")
+    /**
+     * Уникальный идентификатор операции
+     */
+    @NotBlank
+    @Length(max = 32)
     private String operationUid;
 
+    /**
+     * Имя системы отправителя
+     */
     private Systems systemName;
 
-    @NotBlank(message = "System Time является обязательным полем")
+    /**
+     * Время создания сообщения
+     */
+    @NotBlank
     private String systemTime;
 
+    /**
+     * Наименование ресурса
+     */
     private String source;
 
-    @Min(value = 1, message = "Communication ID должен быть не менее 1")
-    @Max(value = 100000, message = "Communication ID должен быть не более 100000")
+    /**
+     * Должность сотрудника
+     */
+    private Positions position;
+
+    /**
+     * Зарплата сотрудника
+     */
+    private Double salary;
+
+    /**
+     * Бонусный коэффициент
+     */
+    private Double bonus;
+
+    /**
+     * Количество отработанных дней
+     */
+    private Integer workDays;
+
+    /**
+     * Уникальный идентификатор коммуникации
+     */
+    @Min(1)
+    @Max(100000)
     private int communicationId;
 
+    /**
+     * Уникальный идентификатор шаблона
+     */
     private int templateId;
+
+    /**
+     * Код продукта
+     */
     private int productCode;
+
+    /**
+     * Смс код
+     */
     private int smsCode;
 
     @Override
     public String toString() {
-        return "{" +
+        return "Request{" +
                 "uid='" + uid + '\'' +
                 ", operationUid='" + operationUid + '\'' +
                 ", systemName=" + systemName +
                 ", systemTime='" + systemTime + '\'' +
                 ", source='" + source + '\'' +
+                ", position=" + position +
+                ", salary=" + salary +
+                ", bonus=" + bonus +
+                ", workDays=" + workDays +
                 ", communicationId=" + communicationId +
                 ", templateId=" + templateId +
                 ", productCode=" + productCode +
                 ", smsCode=" + smsCode +
                 '}';
     }
+
 }

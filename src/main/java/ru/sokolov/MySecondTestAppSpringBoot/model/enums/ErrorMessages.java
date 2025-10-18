@@ -3,11 +3,13 @@ package ru.sokolov.MySecondTestAppSpringBoot.model.enums;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ErrorMessages {
-
     EMPTY(""),
+
     VALIDATION("Ошибка валидации"),
-    UNSUPPORTED("Не поддерживаемая ошибка"),
-    UNKNOWN("Произошла непредвиденная ошибка");
+
+    UNSUPPORTED("Произошла непредвиденная ошибка"),
+
+    UNKNOWN("Не поддерживаемая ошибка");
 
     private final String description;
 
@@ -17,6 +19,11 @@ public enum ErrorMessages {
 
     @JsonValue
     public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public String toString() {
         return description;
     }
 }

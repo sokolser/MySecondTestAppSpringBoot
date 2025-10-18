@@ -3,19 +3,26 @@ package ru.sokolov.MySecondTestAppSpringBoot.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import ru.sokolov.MySecondTestAppSpringBoot.exception.UnsupportedCodeException;
 import ru.sokolov.MySecondTestAppSpringBoot.exception.ValidationFailedException;
+
+import java.util.Objects;
 
 @Slf4j
 @Service
 public class RequestValidationService implements ValidationService {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RequestValidationService.class);
-
-    public void isValid(BindingResult bindingResult) throws ValidationFailedException {
+    @Override
+    public void isValid(BindingResult bindingResult) throws ValidationFailedException, UnsupportedCodeException {
         if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
-            log.error("[VALIDATION] Ошибка валидации: {}", errorMessage);
-            throw new ValidationFailedException(errorMessage);
+            FieldError fieldError = bindingResult.getFieldError("uid");
+            if (fieldError != null && Objects.equals(fieldError.getRejectedValue(), "123")) {
+                log.error("uid is 123, throw UnsupportedException");
+                throw new UnsupportedCodeException(bindingResult.getFieldError().toString());
+            }
+            log.error("bindingResult has errors, throw ValidationFailedException");
+            throw new ValidationFailedException(bindingResult.getFieldError().toString());
         }
     }
 }

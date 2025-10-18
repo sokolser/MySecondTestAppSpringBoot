@@ -7,17 +7,53 @@ import lombok.NoArgsConstructor;
 import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Codes;
 import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorCodes;
 import ru.sokolov.MySecondTestAppSpringBoot.model.enums.ErrorMessages;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Systems;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-
 public class Response {
-     String uid;
-     String operationUid;
-     String systemTime;
-     Codes code;
-     ErrorCodes errorCode;
-     ErrorMessages errorMessage;
+     /**
+      * Уникальный идентификатор сообщения
+      */
+     private String uid;
+
+     /**
+      * Уникальный идентификатор операции
+      */
+     private String operationUid;
+
+     /**
+      * Имя системы отправителя
+      */
+     private Systems systemName;
+
+     /**
+      * Время создания сообщения
+      */
+     private String systemTime;
+
+     /**
+      * Код ответа
+      */
+     private Codes code;
+
+     /**
+      * Годовая премия
+      */
+     private Double annualBonus;
+
+     /**
+      * Квартальная премия
+      */
+     private Double quarterlyBonus;
+
+     /**
+      * Код ошибки
+      */
+     private ErrorCodes errorCode;
+
+     /**
+      * Сообщение об ошибке
+      */
+     private ErrorMessages errorMessage;
 }
