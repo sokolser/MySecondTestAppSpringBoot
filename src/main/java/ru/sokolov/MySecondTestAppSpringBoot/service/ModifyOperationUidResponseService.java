@@ -9,13 +9,13 @@ import java.util.UUID;
 @Qualifier("ModifyOperationUidResponseService")
 public class ModifyOperationUidResponseService
 
-    implements ModifyResponseService{
+        implements ModifyResponseService{
 
-        @Override
-        public Response modify(Response response) {
-            UUID uuid = UUID.randomUUID();
-            response.setOperationUid(uuid.toString());
-            return response;
+    @Override
+    public Response modify(Response response) {
+        UUID uuid = UUID.randomUUID();
+        response.setOperationUid(uuid.toString());
+        return response;
     }
 
 
