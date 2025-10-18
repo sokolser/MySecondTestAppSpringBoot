@@ -5,30 +5,33 @@ import lombok.AllArgsConstructor;
 import  lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import ru.sokolov.MySecondTestAppSpringBoot.model.enums.Systems;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Request {
 
-    @NotBlank (message = "uid является обязательным полем")
-    @Size (max = 32, message = "UID не может превышать 32 символа")
+    @NotBlank(message = "uid является обязательным полем")
+    @Size(max = 32, message = "UID не может превышать 32 символа")
     private String uid;
 
     @NotBlank(message = "Operation UID является обязательным полем")
     @Size(max = 32, message = "Operation UID не может превышать 32 символа")
     private String operationUid;
-    private String systemName;
+
+    private Systems systemName;
 
     @NotBlank(message = "System Time является обязательным полем")
     private String systemTime;
+
     private String source;
 
     @Min(value = 1, message = "Communication ID должен быть не менее 1")
     @Max(value = 100000, message = "Communication ID должен быть не более 100000")
     private int communicationId;
+
     private int templateId;
     private int productCode;
     private int smsCode;
@@ -36,14 +39,14 @@ public class Request {
     @Override
     public String toString() {
         return "{" +
-                "uid+'" +uid + '\'' +
+                "uid='" + uid + '\'' +
                 ", operationUid='" + operationUid + '\'' +
-                ", systemName='" + systemName + '\'' +
+                ", systemName=" + systemName +
                 ", systemTime='" + systemTime + '\'' +
                 ", source='" + source + '\'' +
-                ", communacationId=" + communicationId +
+                ", communicationId=" + communicationId +
                 ", templateId=" + templateId +
-                ", productCode=" +productCode +
+                ", productCode=" + productCode +
                 ", smsCode=" + smsCode +
                 '}';
     }
